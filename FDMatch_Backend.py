@@ -37,7 +37,7 @@ class FDMatch():
             assert(any([self.__findMatch(file[0]) in self.__dirName_Storage for file in self.__fileName_Storage]))
             return True, []
         except:
-            Err_list = [self.__findMatch(file[0]) for file in self.__fileName_Storage if file[0] not in self.__dirName_Storage]
+            Err_list = [file[0]+file[1] for file in self.__fileName_Storage if self.__findMatch(file[0]) not in self.__dirName_Storage]
             return False, Err_list
         
     def __findMatch(self, basename:str):
