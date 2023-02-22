@@ -124,27 +124,32 @@ class MainWindow(QMainWindow):
         assert(type(self.__FDMNumber) == int)
         assert(self.__FDMStartupMode != None)
         
-        if self.__FDMStartupMode == "Select multiple Files":
-            self.__FDMatch = FDMatch.FDM_fetchFiles(number=self.__FDMNumber,
+        try:
+            if self.__FDMStartupMode == "Select multiple Files":
+                self.__FDMatch = FDMatch.FDM_fetchFiles(number=self.__FDMNumber,
+                                                        fileType = self.__FDMFileType)
+            if self.__FDMStartupMode == "Fetch whole Directory":
+                self.__FDMatch = FDMatch.FDM_fetchDir(number=self.__FDMNumber,
                                                     fileType = self.__FDMFileType)
-        if self.__FDMStartupMode == "Fetch whole Directory":
-            self.__FDMatch = FDMatch.FDM_fetchDir(number=self.__FDMNumber,
-                                                  fileType = self.__FDMFileType)
-                        
-        if self.__FDMatch.isCompatible():
-            self.__Fetch.setStyleSheet("background-color : palegreen")
-            self.__Fetch.setText(f"Succeffully allocated files")
-            
-            self.__FileLabel.setText(f"Allocated {self.__FDMatch.get_numberOfAllocatedFiles()} File/s in {self.__FDMatch.get_inpath()}")
-            self.__DirLabel.setText(f"{self.__FDMatch.get_numberOfMatchingDirectories()} matching Directory/ies in {self.__FDMatch.get_inpath()}")
-            
-            self.__Exec.setText('Click to verify!')
-            self.__Exec.setStyleSheet("background-color : white")
-            
-        elif not self.__FDMatch.isCompatible():
-            self.__Fetch.setStyleSheet("background-color : lightcoral")
-            self.__Fetch.setText(f"Something went wrong")
-            self.__errDialogue(self.__FDMatch.get_mismatchedFiles())
+                            
+            if self.__FDMatch.isCompatible():
+                self.__Fetch.setStyleSheet("background-color : palegreen")
+                self.__Fetch.setText(f"Succeffully allocated files")
+                
+                self.__FileLabel.setText(f"Allocated {self.__FDMatch.get_numberOfAllocatedFiles()} File/s in {self.__FDMatch.get_inpath()}")
+                self.__DirLabel.setText(f"{self.__FDMatch.get_numberOfMatchingDirectories()} matching Directory/ies in {self.__FDMatch.get_inpath()}")
+                
+                self.__Exec.setText('Click to verify!')
+                self.__Exec.setStyleSheet("background-color : white")
+                
+            elif not self.__FDMatch.isCompatible():
+                self.__Fetch.setStyleSheet("background-color : lightcoral")
+                self.__Fetch.setText(f"Something went wrong")
+                self.__errDialogue(self.__FDMatch.get_mismatchedFiles())
+                
+        except:
+            pass
+            #TODO Flag that fetching went wrong. Obj could not be constructed. 
             
     def __FDMVerify(self):
         try:
@@ -163,7 +168,7 @@ class MainWindow(QMainWindow):
             self.__FDMatch.set_execMode(self.__FDMExecMode)
             file_already_in_dir, err_arr = self.__FDMatch.check_if_exists()
             if file_already_in_dir:
-                self.__moveWarnDialogue(err_arr=err_arr)
+                return self.__moveWarnDialogue(err_arr=err_arr)
                 
             elif not file_already_in_dir:
                 self.__FDMatch.execute()

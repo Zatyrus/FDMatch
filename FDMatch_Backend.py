@@ -4,9 +4,13 @@ import glob
 from pyDialogue import *
 
 class FDMatch():
-    def __init__(self, inpath, outpath, number, fileType) -> None:
+    def __init__(self, inpath, outpath, number, fileType) -> None:        
         if type(inpath) == tuple or type(inpath) == list:
-            self.__inpath = os.path.dirname(inpath[0])
+            if not inpath.__len__():
+                self.__inpath_isEmpty = True
+                return 
+            else:
+                self.__inpath = os.path.dirname(inpath[0])
             
         self.__outpath:str = outpath
         self.__number:int = number
@@ -107,6 +111,11 @@ class FDMatch():
     
     def set_execMode(self, execMode):
         self.__execMode = execMode
+    
+    def check_inpathIsEmpty(self):
+        pass
+    def check_outpathIsEmpty(self):
+        pass
         
     def verify(self):
         try:
