@@ -161,7 +161,12 @@ class MainWindow(QMainWindow):
     def __FDMExec(self, checked):
         if checked:
             self.__FDMatch.set_execMode(self.__FDMExecMode)
-            self.__FDMatch.execute()
+            file_already_in_dir, err_arr = self.__FDMatch.check_if_exists()
+            if file_already_in_dir:
+                self.__moveWarnDialogue(err_arr=err_arr)
+                
+            elif not file_already_in_dir:
+                self.__FDMatch.execute()
             
             if self.__FDMatch.wasSuccessful():
                 self.__Exec.setStyleSheet("background-color : palegreen")
@@ -178,7 +183,7 @@ class MainWindow(QMainWindow):
         dlg = QMessageBox.critical(
             self,
             "File-Directory Mismatch detected!",
-            f"The following file keys were not recognized in the directory tree:\n\n{err_arr}",
+            f"The following file could not be matched with the directory tree:\n\n{err_arr}",
             buttons=QMessageBox.Reset | QMessageBox.Close | QMessageBox.Ignore,
             defaultButton=QMessageBox.Reset
         )
@@ -189,6 +194,26 @@ class MainWindow(QMainWindow):
             
         elif dlg == QMessageBox.Ignore:
             return
+            
+        elif dlg == QMessageBox.Close:
+            app.exit()
+            
+    def __moveWarnDialogue(self, err_arr):
+        dlg = QMessageBox.warning(
+            self,
+            "Files already exist in Directory Tree!",
+            f"Do you want to continue and overwrite the following files?\n\n{err_arr}",
+            buttons=QMessageBox.Yes | QMessageBox.No | QMessageBox.Close,
+            defaultButton=QMessageBox.No
+        )
+        
+        if dlg == QMessageBox.No:
+            del self.__FDMatch
+            self.__Fetch.setText('Click to Fetch!')
+            self.__Fetch.setStyleSheet("background-color : white")
+            
+        elif dlg == QMessageBox.Yes:
+            self.__FDMatch.execute()
             
         elif dlg == QMessageBox.Close:
             app.exit()
