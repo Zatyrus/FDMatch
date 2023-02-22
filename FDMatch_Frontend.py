@@ -1,18 +1,14 @@
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton,QLabel, QLineEdit, QVBoxLayout, QWidget,QMenu ,QAction
+from PyQt5 import QtGui
 from PyQt5.QtWidgets import (
     QApplication,
     QComboBox,
-    QFontComboBox,
     QLabel,
     QMainWindow,
-    QProgressBar,
     QPushButton,
-    QRadioButton,
     QVBoxLayout,
+    QHBoxLayout,
     QWidget,
     QSpinBox,
-    QHBoxLayout,
-    QVBoxLayout
 )
 
 import sys
@@ -29,7 +25,8 @@ class MainWindow(QMainWindow):
         self.__FDMatch:FDMatch
         self.__FDMExecMode:str
         
-        self.setWindowTitle('Funky File Directory Matching App')
+        self.setWindowTitle('Funky File Directory Matching - Hover for ToolTips')
+        self.setWindowIcon(QtGui.QIcon('favicon.svg'))
         
         preinitial_layout = QVBoxLayout()
         initial_layout = QVBoxLayout()
@@ -41,16 +38,19 @@ class MainWindow(QMainWindow):
         self.__FDMNumberSpin.valueChanged.connect(self.__FDMNumber_changed)
         self.__FDMNumberSpin.setMinimum(0)
         self.__FDMNumberSpin.setValue(7)
+        self.__FDMNumberSpin.setToolTip('Choose the number of characters considered for file-directory matching. Counting starts left-side.')
         
         self.__FDMFileTypeSelection = QComboBox()
         self.__FDMFileTypeSelection.currentTextChanged.connect(self.__FDMFileType_changed)
         self.__FDMFileTypeSelection.addItems(['.pdf', '.txt', '.png', '.jpeg', '.jpg', '.csv'])
         self.__FDMFileTypeSelection.setCurrentText('.pdf')
+        self.__FDMFileTypeSelection.setToolTip('Choose a SINGLE file type to fetch.')
 
         self.__FDMStartupModeSelection = QComboBox()
         self.__FDMStartupModeSelection.currentTextChanged.connect(self.__FDMStartupMode_changed)
         self.__FDMStartupModeSelection.addItems(["Select multiple Files", "Fetch whole Directory"])
         self.__FDMStartupModeSelection.setCurrentText("Select multiple Files")
+        self.__FDMStartupModeSelection.setToolTip("'Select multiple Files' - Let's you choose the files to test for matching directories. \n 'Fetch whole Directory' - Load ALL files in a selected directory matching the selected file type.")
                 
         self.__Fetch = QPushButton()
         self.__Fetch.setText('Click to Fetch!')
@@ -58,17 +58,21 @@ class MainWindow(QMainWindow):
         
         self.__FileLabel = QLabel()
         self.__FileLabel.setText('Pending...')
+        self.__FileLabel.setStyleSheet("padding-bottom: 1px")
         
         self.__DirLabel = QLabel()
         self.__DirLabel.setText('Pending...')
+        self.__DirLabel.setStyleSheet("padding-bottom: 9px")
         
         self.__FDMExecModeSelect = QComboBox()
         self.__FDMExecModeSelect.currentTextChanged.connect(self.__FDMExecModeSelect_changed)
         self.__FDMExecModeSelect.addItems(['Copy (safe)', 'Move (unsafe)'])
         self.__FDMExecModeSelect.setCurrentText('Copy (safe)')
+        self.__FDMExecModeSelect.setToolTip("'Copy (safe)' - COPIES files. \n 'Move (unsafe)' - COPIES and DELETS affected files. \n Both methods will overwrite files with the same name present in the target directory")
         
         self.__Exec = QPushButton()
         self.__Exec.setText('Click to verify!')
+        self.__Exec.setToolTip("Verify if all preior steps (left-side in application) have been completed. \n Will transform into EXECUTION button after successful verification.")
         self.__Exec.clicked.connect(self.__FDMVerify)
         self.__Exec.clicked.connect(self.__FDMExec)
         
@@ -118,7 +122,7 @@ class MainWindow(QMainWindow):
                                                   fileType = self.__FDMFileType)
                         
         if self.__FDMatch.isCompatible():
-            self.__Fetch.setStyleSheet("background-color : green")
+            self.__Fetch.setStyleSheet("background-color : palegreen")
             self.__Fetch.setText(f"Succeffully allocated files")
             
             self.__FileLabel.setText(f"Allocated {self.__FDMatch.get_numberOfAllocatedFiles()} File/s in {self.__FDMatch.get_inpath()}")
@@ -128,7 +132,7 @@ class MainWindow(QMainWindow):
             self.__Exec.setStyleSheet("background-color : white")
             
         elif not self.__FDMatch.isCompatible():
-            self.__Fetch.setStyleSheet("background-color : red")
+            self.__Fetch.setStyleSheet("background-color : lightcoral")
             self.__Fetch.setText(f"Something went wrong")
             
     def __FDMVerify(self):
@@ -140,7 +144,7 @@ class MainWindow(QMainWindow):
             self.__Exec.setStyleSheet("background-color : orange")
             self.__Exec.setText('Ready? --- Sort!')
         except:
-            self.__Exec.setStyleSheet("background-color : red")
+            self.__Exec.setStyleSheet("background-color : lightcoral")
             self.__Exec.setText('Check your input!')
             
     def __FDMExec(self, checked):
@@ -149,8 +153,8 @@ class MainWindow(QMainWindow):
             self.__FDMatch.execute()
             
             if self.__FDMatch.wasSuccessful():
-                self.__Exec.setStyleSheet("background-color : green")
-                self.__Exec.setText(f'{self.__FDMatch.get_numberOfAllocatedFiles()} Files sorted successfully !')
+                self.__Exec.setStyleSheet("background-color : palegreen")
+                self.__Exec.setText(f'{self.__FDMatch.get_numberOfAllocatedFiles()} File/s re-allocated successfully !')
                 self.__Exec.setCheckable(False)
                 self.__reset()
     
@@ -164,6 +168,12 @@ class MainWindow(QMainWindow):
 
 
 app = QApplication(sys.argv)
+app.setStyleSheet("""
+                  QMainWindow {background-color: whitesmoke}
+                  QLabel {padding: 5px; font: bold 12px; font-family: Courier New}
+                  QPushButton {padding: 5px; font: 12px; font-family: Courier New}
+                  QComboBox {padding: 3px; font: 12px;  font-family: Courier New}
+                  QSpinBox {padding: 3px; font: 12px;  font-family: Courier New}""")
 
 window = MainWindow()
 window.show()

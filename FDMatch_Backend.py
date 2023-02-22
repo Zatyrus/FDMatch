@@ -38,7 +38,6 @@ class FDMatch():
             return True, []
         except:
             Err_list = [self.__findMatch(file[0]) for file in self.__fileName_Storage if file[0] not in self.__dirName_Storage]
-            #print(f'The following file keys were not recognized in the directory tree. {Err_list}')
             return False, Err_list
         
     def __findMatch(self, basename:str):
