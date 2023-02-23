@@ -131,6 +131,12 @@ class MainWindow(QMainWindow):
             if self.__FDMStartupMode == "Fetch whole Directory":
                 self.__FDMatch = FDMatch.FDM_fetchDir(number=self.__FDMNumber,
                                                     fileType = self.__FDMFileType)
+            
+            if self.__FDMatch.check_inpathIsEmpty():
+                return self.__InpathIsEmptyDialogue()
+            
+            if self.__FDMatch.check_outpathIsEmpty():
+                return self.__OutpathIsEmptyDialogue()
                             
             if self.__FDMatch.isCompatible():
                 self.__Fetch.setStyleSheet("background-color : palegreen")
@@ -140,7 +146,7 @@ class MainWindow(QMainWindow):
                 self.__DirLabel.setText(f"{self.__FDMatch.get_numberOfMatchingDirectories()} matching Directory/ies in {self.__FDMatch.get_inpath()}")
                 
                 self.__Exec.setText('Click to verify!')
-                self.__Exec.setStyleSheet("background-color : white")
+                self.__Exec.setStyleSheet("background-color : lightgray")
                 
             elif not self.__FDMatch.isCompatible():
                 self.__Fetch.setStyleSheet("background-color : lightcoral")
@@ -148,8 +154,7 @@ class MainWindow(QMainWindow):
                 self.__errDialogue(self.__FDMatch.get_mismatchedFiles())
                 
         except:
-            pass
-            #TODO Flag that fetching went wrong. Obj could not be constructed. 
+            self.__objNoConstructionDialogue()
             
     def __FDMVerify(self):
         try:
@@ -181,26 +186,67 @@ class MainWindow(QMainWindow):
     
     def __reset(self):
         self.__Fetch.setText('Click to Fetch!')
-        self.__Fetch.setStyleSheet("background-color : white")
+        self.__Fetch.setStyleSheet("background-color : lightgray")
         del self.__FDMatch
+        
+    def __objNoConstructionDialogue(self):
+        dlg = QMessageBox.critical(
+            self,
+            "FDMatch Object could not be constructed!",
+            "Please, specify and fetch files. First choose the files to re-distribute, then choose the parent directory containing the target folders.",
+            buttons=QMessageBox.Ok | QMessageBox.Abort,
+            defaultButton=QMessageBox.Ok
+        )
+        
+        if dlg == QMessageBox.Ok:
+            return
+            
+        elif dlg == QMessageBox.Abort:
+            app.exit()
+    
+    def __InpathIsEmptyDialogue(self):
+        dlg = QMessageBox.warning(
+            self,
+            "No valid Files were chosen or match the Description set.",
+            "Please, verify the file type chosen!",
+            buttons=QMessageBox.Ok,
+            defaultButton=QMessageBox.Ok
+        )
+        
+        if dlg == QMessageBox.Ok:
+            del self.__FDMatch
+            return
+            
+    def __OutpathIsEmptyDialogue(self):
+        dlg = QMessageBox.warning(
+            self,
+            "No Directories were discovered in the Path provided.",
+            "Please, verify that the chosen outpath points to the directory containing the target folders!",
+            buttons=QMessageBox.Ok,
+            defaultButton=QMessageBox.Ok
+        )
+        
+        if dlg == QMessageBox.Ok:
+            del self.__FDMatch
+            return
+
         
     def __errDialogue(self, err_arr):
         dlg = QMessageBox.critical(
             self,
             "File-Directory Mismatch detected!",
-            f"The following file could not be matched with the directory tree:\n\n{err_arr}",
-            buttons=QMessageBox.Reset | QMessageBox.Close | QMessageBox.Ignore,
+            f"The following file/s could not be matched with the directory tree:\n\n{err_arr}",
+            buttons=QMessageBox.Reset | QMessageBox.Abort | QMessageBox.Ignore,
             defaultButton=QMessageBox.Reset
         )
         
         if dlg == QMessageBox.Reset:
-            self.__Fetch.setText('Click to Fetch!')
-            self.__Fetch.setStyleSheet("background-color : white")
+            self.__reset()
             
         elif dlg == QMessageBox.Ignore:
             return
             
-        elif dlg == QMessageBox.Close:
+        elif dlg == QMessageBox.Abort:
             app.exit()
             
     def __moveWarnDialogue(self, err_arr):
@@ -208,19 +254,28 @@ class MainWindow(QMainWindow):
             self,
             "Files already exist in Directory Tree!",
             f"Do you want to continue and overwrite the following files?\n\n{err_arr}",
-            buttons=QMessageBox.Yes | QMessageBox.No | QMessageBox.Close,
+            buttons=QMessageBox.Yes | QMessageBox.No |  QMessageBox.Reset | QMessageBox.Abort,
             defaultButton=QMessageBox.No
         )
         
         if dlg == QMessageBox.No:
-            del self.__FDMatch
-            self.__Fetch.setText('Click to Fetch!')
-            self.__Fetch.setStyleSheet("background-color : white")
+            self.__Exec.setChecked(False)
+            return
+            
+        elif dlg == QMessageBox.Reset:
+            self.__Exec.setChecked(False)
+            self.__reset()
             
         elif dlg == QMessageBox.Yes:
             self.__FDMatch.execute()
             
-        elif dlg == QMessageBox.Close:
+            if self.__FDMatch.wasSuccessful():
+                self.__Exec.setStyleSheet("background-color : palegreen")
+                self.__Exec.setText(f'{self.__FDMatch.get_numberOfAllocatedFiles()} File/s re-allocated successfully !')
+                self.__Exec.setCheckable(False)
+                self.__reset()
+            
+        elif dlg == QMessageBox.Abort:
             app.exit()
 
 

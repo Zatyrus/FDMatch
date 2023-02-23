@@ -4,9 +4,14 @@ import glob
 from pyDialogue import *
 
 class FDMatch():
-    def __init__(self, inpath, outpath, number, fileType) -> None:        
+    def __init__(self, inpath, outpath, number, fileType) -> None:   
+        self.__execMode:str
+        self.__success:bool
+        self.__inpath_isEmpty:bool = False
+        self.__outpath_noMatch:bool = False
+             
         if type(inpath) == tuple or type(inpath) == list:
-            if not inpath.__len__():
+            if not inpath.__len__(): # check if inpath is empty
                 self.__inpath_isEmpty = True
                 return 
             else:
@@ -19,14 +24,17 @@ class FDMatch():
         self.__dirName_Storage = [DIR for DIR in os.listdir(outpath) if os.path.isdir(os.path.join(outpath, DIR))]
         self.__fileName_Storage = [os.path.splitext(os.path.basename(file)) for file in inpath]
         
+        if not self.__dirName_Storage.__len__(): # check if outpath is empty
+            self.__outpath_noMatch = True
+            return
+        
         #Filter out unwanted fileTypes
         self.__fileName_Storage = [file for file in self.__fileName_Storage if file[1] == self.__fileType]
+        if not self.__fileName_Storage.__len__():
+            self.__inpath_isEmpty = True
         
         self.__compatible, self.__mismatched_fileNames = self.__check_compatibility()
-        
-        self.__execMode:str
-        self.__success:bool
-    
+            
         
     @classmethod
     def FDM_fetchFiles(cls, number:int = 7, fileType:str = '.pdf'):
@@ -113,9 +121,10 @@ class FDMatch():
         self.__execMode = execMode
     
     def check_inpathIsEmpty(self):
-        pass
+        return self.__inpath_isEmpty
+    
     def check_outpathIsEmpty(self):
-        pass
+        return self.__outpath_noMatch
         
     def verify(self):
         try:
