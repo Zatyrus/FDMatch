@@ -21,7 +21,7 @@ class FDMatch():
         self.__number:int = number
         self.__fileType:str = fileType
         
-        self.__dirName_Storage = [DIR for DIR in os.listdir(outpath) if os.path.isdir(os.path.join(outpath, DIR))]
+        self.__dirName_Storage = {self.__findMatch(DIR):DIR for DIR in os.listdir(outpath) if os.path.isdir(os.path.join(outpath, DIR))}
         self.__fileName_Storage = [os.path.splitext(os.path.basename(file)) for file in inpath]
         
         if not self.__dirName_Storage.__len__(): # check if outpath is empty
@@ -46,10 +46,10 @@ class FDMatch():
             
     def __check_compatibility(self):
         try:
-            assert(any([self.__findMatch(file[0]) in self.__dirName_Storage for file in self.__fileName_Storage]))
+            assert(all([self.__findMatch(file[0]) in self.__dirName_Storage.keys() for file in self.__fileName_Storage]))
             return True, []
         except:
-            Err_list = [file[0]+file[1] for file in self.__fileName_Storage if self.__findMatch(file[0]) not in self.__dirName_Storage]
+            Err_list = [file[0]+file[1] for file in self.__fileName_Storage if self.__findMatch(file[0]) not in self.__dirName_Storage.keys()]
             return False, Err_list
         
     def __findMatch(self, basename:str):
@@ -59,13 +59,13 @@ class FDMatch():
         assert(self.__compatible)
         for file in self.__fileName_Storage:
             shutil.move(src = os.path.join(self.__inpath, file[0]+file[1]),
-                        dst = os.path.join(self.__outpath, self.__findMatch(basename = file[0])))
+                        dst = os.path.join(self.__outpath, self.__dirName_Storage[self.__findMatch(basename = file[0])], file[0]+file[1]))
             
     def __copy(self):
         assert(self.__compatible)
         for file in self.__fileName_Storage:
             shutil.copy2(src = os.path.join(self.__inpath, file[0]+file[1]),
-                        dst = os.path.join(self.__outpath, self.__findMatch(basename = file[0])))
+                        dst = os.path.join(self.__outpath, self.__dirName_Storage[self.__findMatch(basename = file[0])], file[0]+file[1]))
             
     def execute(self):
         if self.__execMode == 'Move (unsafe)':
@@ -84,7 +84,7 @@ class FDMatch():
             return False, []
         
     def __clean_target_Dir(self):
-        [os.remove(os.path.join(self.__outpath,self.__findMatch(file[0]),file[0]+file[1])) for file in self.__fileName_Storage if os.path.isfile(os.path.join(self.__outpath,self.__findMatch(file[0]),file[0]+file[1]))]
+        [os.remove(os.path.join(self.__outpath,self.__dirName_Storage[self.__findMatch(file[0])],file[0]+file[1])) for file in self.__fileName_Storage if os.path.isfile(os.path.join(self.__outpath,self.__dirName_Storage[self.__findMatch(file[0])],file[0]+file[1]))]
             
     ## Helper Functions
     def get_inpath(self):
@@ -109,7 +109,7 @@ class FDMatch():
         return self.__fileName_Storage.__len__()
     
     def get_numberOfMatchingDirectories(self):
-        return set([self.__findMatch(file[0]) for file in self.__fileName_Storage if self.__findMatch(file[0]) in self.__dirName_Storage]).__len__()
+        return set([self.__findMatch(file[0]) for file in self.__fileName_Storage if self.__findMatch(file[0]) in self.__dirName_Storage.keys()]).__len__()
     
     def get_execMode(self):
         return self.__execMode
